@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SupportTrack | Student Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --maroon: #6B1A1A;
+            --maroon-dark: #4A1010;
+            --maroon-light: #8B2E2E;
+            --maroon-pale: #F9F0F0;
+            --maroon-faint: #FDF5F5;
+            --text: #1a1a1a;
+            --muted: #6b6b6b;
+            --border: #e4d4d4;
+            --white: #ffffff;
+            --success: #1a6b3a;
+            --success-bg: #f0fdf5;
+            --error: #c0392b;
+            --error-bg: #fdf0f0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--maroon-pale);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse at 10% 80%, rgba(107,26,26,0.07) 0%, transparent 55%),
+                radial-gradient(ellipse at 90% 10%, rgba(107,26,26,0.05) 0%, transparent 45%);
+        }
+
+        /* ── NAV ── */
+        nav {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            box-shadow: 0 1px 12px rgba(107,26,26,0.07);
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 14px; }
+
+        .burger-btn {
+            width: 36px; height: 36px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 5px; background: none; border: none;
+            cursor: pointer; border-radius: 8px;
+            transition: background 0.15s; padding: 6px;
+        }
+
+        .burger-btn:hover { background: var(--maroon-pale); }
+
+        .burger-btn span {
+            display: block; width: 20px; height: 2px;
+            background: var(--maroon); border-radius: 2px;
+            transition: all 0.3s ease; transform-origin: center;
+        }
+
+        .burger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .burger-btn.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+        .burger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        .nav-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px; color: var(--maroon-dark);
+            text-decoration: none; letter-spacing: -0.2px;
+        }
+
+        .nav-brand span { color: var(--maroon-light); }
+
+        /* nav page indicator */
+        .nav-page-pill {
+            display: flex; align-items: center; gap: 6px;
+            background: var(--maroon-pale);
+            border: 1px solid var(--border);
+            border-radius: 20px; padding: 4px 12px;
+            font-size: 11px; font-weight: 700;
+            color: var(--maroon); letter-spacing: 0.04em;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .nav-page-pill span { width: 6px; height: 6px; border-radius: 50%; background: var(--maroon); display: inline-block; }
+
+        /* ── PROFILE DROPDOWN ── */
+        .profile-wrapper { position: relative; }
+
+        .profile-btn {
+            display: flex; align-items: center; gap: 10px;
+            background: none; border: 1.5px solid var(--border);
+            border-radius: 40px; padding: 5px 14px 5px 6px;
+            cursor: pointer; transition: all 0.2s;
+        }
+
+        .profile-btn:hover { background: var(--maroon-pale); border-color: var(--maroon); }
+
+        .profile-avatar {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: var(--maroon); display: flex;
+            align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700;
+            color: var(--white); flex-shrink: 0;
+        }
+
+        .profile-info { text-align: left; line-height: 1.2; }
+        .profile-id { font-size: 12px; font-weight: 600; color: var(--maroon-dark); }
+        .profile-role { font-size: 10px; color: var(--muted); }
+
+        .profile-chevron {
+            width: 12px; height: 12px; stroke: var(--muted);
+            transition: transform 0.2s; flex-shrink: 0;
+        }
+
+        .profile-wrapper.open .profile-chevron { transform: rotate(180deg); }
+
+        .profile-dropdown {
+            display: none; position: absolute;
+            top: calc(100% + 8px); right: 0;
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 14px; box-shadow: 0 8px 32px rgba(107,26,26,0.12);
+            min-width: 220px; z-index: 300; overflow: hidden;
+            animation: dropIn 0.15s ease both;
+        }
+
+        @keyframes dropIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .profile-dropdown.open { display: block; }
+
+        .profile-dropdown-header {
+            padding: 16px 18px 12px;
+            border-bottom: 1px solid var(--border);
+            background: var(--maroon-pale);
+        }
+
+        .profile-dropdown-name { font-size: 14px; font-weight: 600; color: var(--maroon-dark); margin-bottom: 2px; }
+        .profile-dropdown-id { font-size: 12px; color: var(--muted); }
+
+        .profile-dropdown-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 11px 18px; font-size: 13px; font-weight: 500;
+            color: var(--text); cursor: pointer; transition: background 0.15s;
+            text-decoration: none; border: none; background: none;
+            width: 100%; text-align: left;
+        }
+
+        .profile-dropdown-item:hover { background: var(--maroon-pale); color: var(--maroon); }
+        .profile-dropdown-item svg { width: 15px; height: 15px; stroke: currentColor; flex-shrink: 0; }
+        .profile-dropdown-divider { height: 1px; background: var(--border); }
+        .profile-dropdown-item.logout { color: var(--error); }
+        .profile-dropdown-item.logout:hover { background: var(--error-bg); color: var(--error); }
+
+        /* ── DRAWER ── */
+        .drawer-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(74,16,16,0.25);
+            backdrop-filter: blur(2px); z-index: 150;
+        }
+
+        .drawer-overlay.open { display: block; }
+
+        .drawer {
+            position: fixed; top: 0; left: 0;
+            height: 100vh; width: 270px;
+            background: var(--white); z-index: 160;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column;
+            box-shadow: 4px 0 24px rgba(107,26,26,0.12);
+        }
+
+        .drawer.open { transform: translateX(0); }
+
+        .drawer-header {
+            padding: 20px 22px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--maroon-dark);
+            flex-shrink: 0;
+        }
+
+        .drawer-brand { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--white); }
+        .drawer-brand span { color: #e8a0a0; }
+        .drawer-subtitle { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+
+        /* Drawer tab buttons */
+        .drawer-tab-bar {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            background: var(--white);
+        }
+
+        .drawer-tab-btn {
+            flex: 1; padding: 11px 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12px; font-weight: 600;
+            color: var(--muted); cursor: pointer;
+            border: none; background: none;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s;
+        }
+
+        .drawer-tab-btn.active { color: var(--maroon); border-bottom-color: var(--maroon); }
+        .drawer-tab-btn:hover:not(.active) { background: var(--maroon-faint); color: var(--maroon-light); }
+
+        /* Drawer panels */
+        .drawer-panel { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+        .drawer-panel.active { display: flex; }
+
+        /* NAV PANEL */
+        .drawer-nav-body { flex: 1; overflow-y: auto; padding: 16px 0; }
+
+        .drawer-section-label {
+            font-size: 10px; font-weight: 700;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: #bba8a8; padding: 0 22px;
+            margin-bottom: 6px; margin-top: 14px;
+        }
+
+        .drawer-section-label:first-child { margin-top: 0; }
+
+        .drawer-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 11px 22px; font-size: 13.5px; font-weight: 500;
+            color: var(--text); cursor: pointer; transition: all 0.15s;
+            text-decoration: none; border: none; background: none;
+            width: 100%; text-align: left;
+        }
+
+        .drawer-item:hover { background: var(--maroon-pale); color: var(--maroon); }
+
+        .drawer-item.active {
+            background: var(--maroon-pale); color: var(--maroon);
+            font-weight: 600; border-left: 3px solid var(--maroon);
+            padding-left: 19px;
+        }
+
+        .drawer-item svg { width: 16px; height: 16px; stroke: currentColor; flex-shrink: 0; opacity: 0.7; }
+        .drawer-item.active svg { opacity: 1; }
+
+        .drawer-item-badge {
+            margin-left: auto; background: var(--maroon);
+            color: var(--white); font-size: 10px; font-weight: 700;
+            padding: 2px 7px; border-radius: 10px;
+        }
+
+        .drawer-footer { padding: 14px 22px; border-top: 1px solid var(--border); flex-shrink: 0; }
+        .drawer-footer-info { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+        /* COMMUNITY BOARD PANEL */
+        .board-panel-top {
+            padding: 12px 16px 8px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .board-panel-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 16px; color: var(--maroon-dark);
+            margin-bottom: 2px;
+        }
+
+        .board-panel-sub { font-size: 11px; color: var(--muted); }
+
+        .board-refresh-btn {
+            display: flex; align-items: center; gap: 5px;
+            margin: 8px 16px 0;
+            padding: 7px 12px;
+            background: var(--maroon-pale);
+            border: 1px solid var(--border);
+            border-radius: 8px; font-size: 11px; font-weight: 600;
+            color: var(--maroon); cursor: pointer; transition: all 0.15s;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .board-refresh-btn:hover { background: #f0dede; border-color: var(--maroon-light); }
+        .board-refresh-btn svg { width: 12px; height: 12px; stroke: currentColor; }
+
+        .board-scroll { flex: 1; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+
+        .board-loading { text-align: center; padding: 40px 12px; color: var(--muted); font-size: 12px; font-style: italic; }
+
+        .board-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 12px; padding: 13px 14px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .board-card:hover { border-color: var(--maroon-light); box-shadow: 0 2px 10px rgba(107,26,26,0.07); }
+
+        .board-card-top {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; margin-bottom: 7px; gap: 6px;
+        }
+
+        .board-id { font-size: 12px; font-weight: 700; color: var(--maroon); }
+
+        .board-badge {
+            display: inline-block; padding: 2px 7px;
+            border-radius: 20px; font-size: 10px; font-weight: 700;
+            white-space: nowrap; flex-shrink: 0;
+        }
+
+        .badge-academic  { background: #eef2ff; color: #3b4abf; border: 1px solid #c7d0f8; }
+        .badge-financial { background: #fff8ec; color: #92610a; border: 1px solid #f5dfa0; }
+        .badge-welfare   { background: #f0fdf5; color: #1a6b3a; border: 1px solid #b7e8cc; }
+
+        .board-desc {
+            font-size: 12px; color: var(--text); line-height: 1.55;
+            margin-bottom: 9px;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .board-card-footer {
+            display: flex; justify-content: space-between;
+            align-items: center;
+        }
+
+        .board-dept { font-size: 11px; color: var(--maroon-light); font-weight: 500; }
+
+        .board-status {
+            font-size: 10px; font-weight: 600; padding: 2px 7px;
+            border-radius: 10px;
+        }
+
+        .st-routed   { background: #f0f7fd; color: #1a4a6b; border: 1px solid #b8d8f0; }
+        .st-progress { background: #fffbeb; color: #92610a; border: 1px solid #f0d8a0; }
+        .st-resolved { background: #f0fdf5; color: #1a6b3a; border: 1px solid #b7e8cc; }
+        .st-closed   { background: #f5f5f5; color: #666;    border: 1px solid #ddd; }
+
+        .board-empty { text-align: center; padding: 48px 12px; color: var(--muted); }
+        .board-empty svg { width: 36px; height: 36px; stroke: #ddc8c8; margin-bottom: 8px; display: block; margin-left: auto; margin-right: auto; }
+        .board-empty p { font-size: 12px; }
+
+        /* ── PAGE VIEWS ── */
+        .page-view { display: none; }
+        .page-view.active { display: block; }
+
+        /* SUBMIT PAGE */
+        .page-submit {
+            max-width: 680px;
+            margin: 48px auto;
+            padding: 0 24px;
+        }
+
+        .page-header { margin-bottom: 32px; }
+
+        .page-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 30px; color: var(--maroon-dark); margin-bottom: 6px;
+        }
+
+        .page-header p { font-size: 14px; color: var(--muted); }
+
+        .card {
+            background: var(--white); border-radius: 20px; padding: 40px;
+            box-shadow: 0 4px 30px rgba(107,26,26,0.08), 0 1px 3px rgba(107,26,26,0.04);
+            border: 1px solid var(--border); animation: fadeUp 0.35s ease both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .form-group { margin-bottom: 16px; }
+
+        label {
+            display: block; font-size: 11px; font-weight: 600;
+            letter-spacing: 0.07em; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 7px;
+        }
+
+        select, textarea {
+            width: 100%; padding: 12px 14px;
+            border: 1.5px solid var(--border); border-radius: 10px;
+            font-family: 'DM Sans', sans-serif; font-size: 14px;
+            color: var(--text); background: #faf8f8;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none; appearance: none;
+        }
+
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b1a1a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 14px center;
+            padding-right: 38px; cursor: pointer;
+        }
+
+        select:focus, textarea:focus {
+            border-color: var(--maroon);
+            box-shadow: 0 0 0 3px rgba(107,26,26,0.08);
+            background: var(--white);
+        }
+
+        textarea { resize: vertical; line-height: 1.6; }
+
+        .file-wrapper {
+            border: 1.5px dashed var(--border); border-radius: 10px;
+            padding: 18px; text-align: center; background: #faf8f8;
+            transition: border-color 0.2s; cursor: pointer;
+        }
+
+        .file-wrapper:hover { border-color: var(--maroon-light); }
+        .file-wrapper input[type="file"] { display: none; }
+        .file-label { font-size: 13px; color: var(--muted); cursor: pointer; }
+        .file-label strong { color: var(--maroon); font-weight: 600; }
+
+        .btn-primary {
+            width: 100%; padding: 14px; background: var(--maroon);
+            color: var(--white); border: none; border-radius: 10px;
+            font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+            cursor: pointer; transition: background 0.2s, transform 0.1s;
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px; margin-top: 8px;
+        }
+
+        .btn-primary:hover { background: var(--maroon-dark); }
+        .btn-primary:active { transform: scale(0.99); }
+
+        #form-msg {
+            margin-top: 14px; padding: 12px 16px;
+            border-radius: 10px; font-size: 13px; font-weight: 500;
+            text-align: center; display: none;
+        }
+
+        #form-msg.success { display: block; color: var(--success); background: var(--success-bg); border: 1px solid #b7e8cc; }
+        #form-msg.error   { display: block; color: var(--error);   background: var(--error-bg);   border: 1px solid #f5b7b1; }
+        #form-msg.loading { display: block; color: var(--maroon);  background: var(--maroon-pale); }
+
+        .section-divider { height: 1px; background: var(--border); margin: 28px 0; }
+
+        .section-label {
+            font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.1em;
+            color: var(--maroon); margin-bottom: 16px;
+        }
+
+        /* COMMUNITY PAGE (full page view) */
+        .page-board {
+            max-width: 760px;
+            margin: 48px auto;
+            padding: 0 24px;
+        }
+
+        .board-page-header { margin-bottom: 24px; }
+
+        .board-page-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 30px; color: var(--maroon-dark); margin-bottom: 6px;
+        }
+
+        .board-page-header p { font-size: 14px; color: var(--muted); }
+
+        .board-page-controls {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+        }
+
+        .board-page-count {
+            font-size: 13px; color: var(--muted); font-weight: 500;
+        }
+
+        .board-page-refresh {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 16px; background: var(--white);
+            border: 1.5px solid var(--border); border-radius: 9px;
+            font-size: 13px; font-weight: 600; color: var(--maroon);
+            cursor: pointer; transition: all 0.15s;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .board-page-refresh:hover { background: var(--maroon-pale); border-color: var(--maroon-light); }
+        .board-page-refresh svg { width: 14px; height: 14px; stroke: currentColor; }
+
+        .board-page-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .board-page-card {
+            background: var(--white); border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 12px rgba(107,26,26,0.05);
+            padding: 20px 22px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            animation: fadeUp 0.35s ease both;
+        }
+
+        .board-page-card:hover { border-color: var(--maroon-light); box-shadow: 0 4px 20px rgba(107,26,26,0.1); }
+
+        .board-page-card-top {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; margin-bottom: 10px; gap: 8px;
+        }
+
+        .board-page-id { font-size: 13px; font-weight: 700; color: var(--maroon); }
+
+        .board-page-desc {
+            font-size: 13.5px; color: var(--text); line-height: 1.6;
+            margin-bottom: 14px;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .board-page-footer {
+            display: flex; justify-content: space-between;
+            align-items: center; padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .board-page-dept { font-size: 12px; color: var(--maroon-light); font-weight: 600; }
+
+        .board-page-status {
+            font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 12px;
+        }
+
+        .board-page-empty {
+            text-align: center; padding: 80px 24px; color: var(--muted);
+            grid-column: 1 / -1;
+        }
+
+        .board-page-empty svg { width: 48px; height: 48px; stroke: #ddc8c8; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; }
+        .board-page-empty p { font-size: 14px; }
+
+        .board-page-loading { text-align: center; padding: 80px; color: var(--muted); font-size: 14px; font-style: italic; grid-column: 1 / -1; }
+    </style>
+</head>
+<body>
+
+    <!-- ── DRAWER OVERLAY ── -->
+    <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+
+    <!-- ── DRAWER ── -->
+    <div class="drawer" id="drawer">
+        <div class="drawer-header">
+            <p class="drawer-brand">Support<span>Track</span></p>
+            <p class="drawer-subtitle">Student Portal</p>
+        </div>
+
+        <!-- Tab bar -->
+        <div class="drawer-tab-bar">
+            <button class="drawer-tab-btn active" id="drawerTabNav" onclick="switchDrawerTab('nav')">Navigation</button>
+            <button class="drawer-tab-btn" id="drawerTabBoard" onclick="switchDrawerTab('board')">Community</button>
+        </div>
+
+        <!-- NAV PANEL -->
+        <div class="drawer-panel active" id="drawerPanelNav">
+            <div class="drawer-nav-body">
+                <p class="drawer-section-label">Pages</p>
+                <button class="drawer-item active" id="navItemSubmit" onclick="goToPage('submit')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    Submit a Concern
+                    <span class="drawer-item-badge">New</span>
+                </button>
+                <button class="drawer-item" id="navItemBoard" onclick="goToPage('board')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    Community Board
+                </button>
+
+                <p class="drawer-section-label">Help</p>
+                <div class="drawer-item" onclick="closeDrawer()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    How it Works
+                </div>
+                <div class="drawer-item" onclick="closeDrawer()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    Contact Support
+                </div>
+            </div>
+            <div class="drawer-footer">
+                <p class="drawer-footer-info">SupportTrack v1.0<br>Student Concern Tracking System</p>
+            </div>
+        </div>
+
+        <!-- COMMUNITY BOARD PANEL (mini preview inside drawer) -->
+        <div class="drawer-panel" id="drawerPanelBoard">
+            <div class="board-panel-top">
+                <p class="board-panel-title">Community Board</p>
+                <p class="board-panel-sub">Public concerns from students</p>
+            </div>
+            <button class="board-refresh-btn" onclick="loadBoardPreview()">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"/>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+                Refresh
+            </button>
+            <div class="board-scroll" id="boardPreviewList">
+                <div class="board-loading">Loading…</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── NAV ── -->
+    <nav>
+        <div class="nav-left">
+            <button class="burger-btn" id="burgerBtn" onclick="toggleDrawer()" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+            <a class="nav-brand" href="#">Support<span>Track</span></a>
+            <div class="nav-page-pill" id="navPagePill">
+                <span></span> Submit Concern
+            </div>
+        </div>
+
+        <div class="profile-wrapper" id="profileWrapper">
+            <button class="profile-btn" onclick="toggleProfile()">
+                <div class="profile-avatar" id="profileAvatar">ST</div>
+                <div class="profile-info">
+                    <p class="profile-id" id="profileId">Loading…</p>
+                    <p class="profile-role">Student</p>
+                </div>
+                <svg class="profile-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </button>
+
+            <div class="profile-dropdown" id="profileDropdown">
+                <div class="profile-dropdown-header">
+                    <p class="profile-dropdown-name" id="dropdownName">Student</p>
+                    <p class="profile-dropdown-id" id="dropdownId">—</p>
+                </div>
+                <a class="profile-dropdown-item" href="#">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    My Profile
+                </a>
+                <div class="profile-dropdown-divider"></div>
+                <a class="profile-dropdown-item logout" href="/">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ── PAGE: SUBMIT CONCERN ── -->
+    <div class="page-view active" id="pageSubmit">
+        <div class="page-submit">
+            <div class="page-header">
+                <h2>Submit a Concern</h2>
+                <p>Your concern will be automatically routed to the correct department.</p>
+            </div>
+
+            <div class="card">
+                <form id="concernForm">
+                    <input type="hidden" id="student_id" value="">
+                    <input type="hidden" id="program" value="">
+
+                    <p class="section-label">Concern Details</p>
+
+                    <div class="form-grid">
+                        <div>
+                            <label>Category</label>
+                            <select id="category" required>
+                                <option value="Academic">Academic</option>
+                                <option value="Financial">Financial</option>
+                                <option value="Student Welfare">Student Welfare</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Anonymity</label>
+                            <select id="is_anonymous">
+                                <option value="false">Show My ID</option>
+                                <option value="true">Stay Anonymous</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="description" rows="6" required placeholder="Describe your concern in detail. Include relevant dates, people involved, or any supporting context…"></textarea>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <p class="section-label">Attachment (Optional)</p>
+                    <div class="file-wrapper" onclick="document.getElementById('fileInput').click()">
+                        <input type="file" id="fileInput" onchange="updateFileName(this)">
+                        <p class="file-label" id="fileLabelText">
+                            <strong>Click to upload</strong> or drag and drop a file here<br>
+                            <span style="font-size:12px;">PDF, PNG, JPG up to 10MB</span>
+                        </p>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <button type="submit" class="btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                        Submit Concern
+                    </button>
+
+                    <div id="form-msg"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── PAGE: COMMUNITY BOARD ── -->
+    <div class="page-view" id="pageBoardFull">
+        <div class="page-board">
+            <div class="board-page-header">
+                <h2>Community Board</h2>
+                <p>Public concerns submitted by fellow students — anonymous concerns are hidden.</p>
+            </div>
+
+            <div class="board-page-controls">
+                <p class="board-page-count" id="boardPageCount">Loading…</p>
+                <button class="board-page-refresh" onclick="loadBoardFull()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+
+            <div class="board-page-grid" id="boardPageGrid">
+                <div class="board-page-loading">Loading community concerns…</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── PAGE NAVIGATION ──
+        let currentPage = 'submit';
+
+        function goToPage(page) {
+            currentPage = page;
+
+            document.querySelectorAll('.page-view').forEach(v => v.classList.remove('active'));
+            document.getElementById(page === 'submit' ? 'pageSubmit' : 'pageBoardFull').classList.add('active');
+
+            // Update nav pill
+            const pill = document.getElementById('navPagePill');
+            pill.innerHTML = page === 'submit'
+                ? '<span></span> Submit Concern'
+                : '<span></span> Community Board';
+
+            // Update drawer nav active state
+            document.getElementById('navItemSubmit').classList.toggle('active', page === 'submit');
+            document.getElementById('navItemBoard').classList.toggle('active', page === 'board');
+
+            closeDrawer();
+
+            if (page === 'board') loadBoardFull();
+        }
+
+        // ── DRAWER TABS ──
+        function switchDrawerTab(tab) {
+            document.getElementById('drawerTabNav').classList.toggle('active', tab === 'nav');
+            document.getElementById('drawerTabBoard').classList.toggle('active', tab === 'board');
+            document.getElementById('drawerPanelNav').classList.toggle('active', tab === 'nav');
+            document.getElementById('drawerPanelBoard').classList.toggle('active', tab === 'board');
+            if (tab === 'board') loadBoardPreview();
+        }
+
+        // ── DRAWER ──
+        function toggleDrawer() {
+            const isOpen = document.getElementById('drawer').classList.contains('open');
+            document.getElementById('drawer').classList.toggle('open', !isOpen);
+            document.getElementById('drawerOverlay').classList.toggle('open', !isOpen);
+            document.getElementById('burgerBtn').classList.toggle('open', !isOpen);
+        }
+
+        function closeDrawer() {
+            document.getElementById('drawer').classList.remove('open');
+            document.getElementById('drawerOverlay').classList.remove('open');
+            document.getElementById('burgerBtn').classList.remove('open');
+        }
+
+        // ── PROFILE ──
+        function toggleProfile() {
+            document.getElementById('profileWrapper').classList.toggle('open');
+            document.getElementById('profileDropdown').classList.toggle('open');
+        }
+
+        document.addEventListener('click', function(e) {
+            const wrapper = document.getElementById('profileWrapper');
+            if (!wrapper.contains(e.target)) {
+                wrapper.classList.remove('open');
+                document.getElementById('profileDropdown').classList.remove('open');
+            }
+        });
+
+        // ── USER INFO ──
+        const storedId      = localStorage.getItem("student_id") || "";
+        const storedProgram = localStorage.getItem("program") || "BSIT";
+
+        document.getElementById("student_id").value = storedId;
+        document.getElementById("program").value    = storedProgram;
+
+        if (storedId) {
+            document.getElementById("profileId").innerText    = storedId;
+            document.getElementById("dropdownId").innerText   = storedId;
+            document.getElementById("dropdownName").innerText = "Student";
+            const parts    = storedId.split("-");
+            const initials = parts.length >= 2
+                ? parts[0].slice(-1) + parts[1].slice(0, 1)
+                : storedId.slice(0, 2).toUpperCase();
+            document.getElementById("profileAvatar").innerText = initials.toUpperCase();
+        }
+
+        // ── BOARD DATA FETCH ──
+        async function fetchBoardData() {
+            const res  = await fetch('/admin/concerns');
+            const data = await res.json();
+            return (data.concerns || []).filter(c => !c.is_anonymous);
+        }
+
+        // Mini preview inside drawer
+        async function loadBoardPreview() {
+            const list = document.getElementById('boardPreviewList');
+            list.innerHTML = '<div class="board-loading">Loading…</div>';
+            try {
+                const concerns = await fetchBoardData();
+                if (!concerns.length) {
+                    list.innerHTML = `<div class="board-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        <p>No public concerns yet.</p></div>`;
+                    return;
+                }
+                list.innerHTML = concerns.map(c => `
+                    <div class="board-card">
+                        <div class="board-card-top">
+                            <span class="board-id">${c.id}</span>
+                            ${boardBadge(c.category)}
+                        </div>
+                        <p class="board-desc">${escapeHtml(c.description)}</p>
+                        <div class="board-card-footer">
+                            <span class="board-dept">${c.assigned_dept || '—'}</span>
+                            ${boardStatus(c.status)}
+                        </div>
+                    </div>
+                `).join('');
+            } catch {
+                list.innerHTML = '<div class="board-loading">Failed to load.</div>';
+            }
+        }
+
+        // Full page board
+        async function loadBoardFull() {
+            const grid  = document.getElementById('boardPageGrid');
+            const count = document.getElementById('boardPageCount');
+            grid.innerHTML  = '<div class="board-page-loading">Loading community concerns…</div>';
+            count.innerText = 'Loading…';
+            try {
+                const concerns = await fetchBoardData();
+                count.innerText = concerns.length
+                    ? `${concerns.length} public concern${concerns.length !== 1 ? 's' : ''}`
+                    : '0 concerns';
+
+                if (!concerns.length) {
+                    grid.innerHTML = `<div class="board-page-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <p>No public concerns yet. Be the first to submit!</p></div>`;
+                    return;
+                }
+
+                grid.innerHTML = concerns.map(c => `
+                    <div class="board-page-card">
+                        <div class="board-page-card-top">
+                            <span class="board-page-id">${c.id}</span>
+                            ${boardBadge(c.category)}
+                        </div>
+                        <p class="board-page-desc">${escapeHtml(c.description)}</p>
+                        <div class="board-page-footer">
+                            <span class="board-page-dept">${c.assigned_dept || '—'}</span>
+                            ${boardStatus(c.status, true)}
+                        </div>
+                    </div>
+                `).join('');
+            } catch {
+                grid.innerHTML = '<div class="board-page-loading">Failed to load. Please try again.</div>';
+                count.innerText = 'Error';
+            }
+        }
+
+        // ── HELPERS ──
+        function boardBadge(cat) {
+            const map = { 'Academic': 'badge-academic', 'Financial': 'badge-financial', 'Student Welfare': 'badge-welfare', 'Welfare': 'badge-welfare' };
+            return `<span class="board-badge ${map[cat] || ''}">${cat}</span>`;
+        }
+
+        function boardStatus(status, large = false) {
+            const map = { 'Routed': 'st-routed', 'In Progress': 'st-progress', 'Resolved': 'st-resolved', 'Closed': 'st-closed' };
+            const cls = large ? 'board-page-status' : 'board-status';
+            return `<span class="${cls} ${map[status] || 'st-routed'}">${status}</span>`;
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // ── FILE UPDATE ──
+        function updateFileName(input) {
+            const label = document.getElementById('fileLabelText');
+            label.innerHTML = input.files?.length
+                ? `<strong style="color:var(--success);">File selected:</strong> ${input.files[0].name}`
+                : `<strong>Click to upload</strong> or drag and drop a file here<br><span style="font-size:12px;">PDF, PNG, JPG up to 10MB</span>`;
+        }
+
+        // ── SUBMIT ──
+        document.getElementById("concernForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const msgEl = document.getElementById("form-msg");
+            msgEl.className = "loading";
+            msgEl.innerText = "Submitting and auto-routing your concern…";
+
+            const formData = new FormData();
+            formData.append("student_id",   document.getElementById("student_id").value);
+            formData.append("program",      document.getElementById("program").value);
+            formData.append("category",     document.getElementById("category").value);
+            formData.append("description",  document.getElementById("description").value);
+            formData.append("is_anonymous", document.getElementById("is_anonymous").value === "true");
+
+            const fileInput = document.getElementById("fileInput");
+            if (fileInput.files.length > 0) formData.append("attachment", fileInput.files[0]);
+
+            try {
+                const res  = await fetch("/submit_concern", { method: "POST", body: formData });
+                const data = await res.json();
+
+                if (data.status === "success") {
+                    msgEl.className = "success";
+                    msgEl.innerText = "✓ Concern submitted successfully! Tracking ID: " + data.tracking_id;
+                    document.getElementById("concernForm").reset();
+                    document.getElementById("student_id").value = storedId;
+                    document.getElementById("program").value    = storedProgram;
+                    document.getElementById('fileLabelText').innerHTML = `<strong>Click to upload</strong> or drag and drop a file here<br><span style="font-size:12px;">PDF, PNG, JPG up to 10MB</span>`;
+                } else {
+                    msgEl.className = "error";
+                    msgEl.innerText = "Error: " + data.message;
+                }
+            } catch {
+                msgEl.className = "error";
+                msgEl.innerText = "Server connection failed. Please try again.";
+            }
+        });
+    </script>
+</body>
+</html>

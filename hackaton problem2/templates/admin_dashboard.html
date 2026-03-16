@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SupportTrack | Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --maroon: #6B1A1A;
+            --maroon-dark: #4A1010;
+            --maroon-light: #8B2E2E;
+            --maroon-pale: #F9F0F0;
+            --text: #1a1a1a;
+            --muted: #6b6b6b;
+            --border: #e4d4d4;
+            --white: #ffffff;
+            --success: #1a6b3a;
+            --success-bg: #f0fdf5;
+            --warning: #92610a;
+            --warning-bg: #fffbeb;
+            --info: #1a4a6b;
+            --info-bg: #f0f7fd;
+            --error: #c0392b;
+            --error-bg: #fdf0f0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--maroon-pale);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* NAV */
+        nav {
+            background: var(--maroon-dark);
+            padding: 0 32px;
+            height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            box-shadow: 0 2px 16px rgba(74,16,16,0.25);
+        }
+
+        .nav-brand { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--white); text-decoration: none; }
+        .nav-brand span { color: #e8a0a0; }
+        .nav-right { display: flex; align-items: center; gap: 16px; }
+
+        .nav-admin-badge {
+            background: rgba(255,255,255,0.12);
+            color: #fde8e8;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 4px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+
+        .nav-logout {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fde8e8;
+            text-decoration: none;
+            padding: 6px 14px;
+            border: 1.5px solid rgba(255,255,255,0.25);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .nav-logout:hover { background: rgba(255,255,255,0.12); }
+
+        .layout { display: flex; flex: 1; }
+
+        /* SIDEBAR */
+        aside {
+            width: 220px;
+            background: var(--white);
+            border-right: 1px solid var(--border);
+            padding: 28px 0;
+            flex-shrink: 0;
+            position: sticky;
+            top: 58px;
+            height: calc(100vh - 58px);
+            overflow-y: auto;
+        }
+
+        .sidebar-section { padding: 0 16px; margin-bottom: 24px; }
+
+        .sidebar-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #bba8a8;
+            padding: 0 8px;
+            margin-bottom: 6px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 9px;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.15s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            text-decoration: none;
+        }
+
+        .sidebar-link:hover { background: var(--maroon-pale); color: var(--maroon); }
+        .sidebar-link.active { background: var(--maroon-pale); color: var(--maroon); font-weight: 600; }
+        .sidebar-link svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.7; }
+        .sidebar-link.active svg { opacity: 1; }
+
+        main { flex: 1; padding: 36px; overflow-y: auto; max-width: 1100px; }
+
+        /* STATS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: 14px;
+            padding: 20px 22px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 12px rgba(107,26,26,0.05);
+            animation: fadeUp 0.4s ease both;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.05s; }
+        .stat-card:nth-child(2) { animation-delay: 0.1s; }
+        .stat-card:nth-child(3) { animation-delay: 0.15s; }
+        .stat-card:nth-child(4) { animation-delay: 0.2s; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 10px; }
+        .stat-value { font-family: 'Playfair Display', serif; font-size: 32px; color: var(--maroon-dark); line-height: 1; margin-bottom: 6px; }
+        .stat-sub { font-size: 12px; color: var(--muted); }
+        .stat-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+
+        /* SECTION CARD */
+        .section-card {
+            background: var(--white);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 16px rgba(107,26,26,0.05);
+            margin-bottom: 28px;
+            animation: fadeUp 0.4s ease both;
+            animation-delay: 0.25s;
+            overflow: hidden;
+        }
+
+        .section-card-header {
+            padding: 20px 28px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .section-card-title { font-family: 'Playfair Display', serif; font-size: 17px; color: var(--maroon-dark); }
+        .section-card-body { padding: 0; }
+
+        /* FILTERS */
+        .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+        .filter-select {
+            padding: 7px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            color: var(--text);
+            background: #faf8f8;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b1a1a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 28px;
+            transition: border-color 0.2s;
+        }
+
+        .filter-select:focus { border-color: var(--maroon); }
+
+        .search-input {
+            padding: 7px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            color: var(--text);
+            background: #faf8f8;
+            outline: none;
+            width: 200px;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus { border-color: var(--maroon); }
+
+        /* ── EXPORT DROPDOWN ── */
+        .export-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .btn-export {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            background: var(--maroon);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-export:hover { background: var(--maroon-dark); }
+
+        .btn-export svg { width: 14px; height: 14px; }
+
+        .export-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(107,26,26,0.12);
+            min-width: 170px;
+            z-index: 100;
+            overflow: hidden;
+            animation: dropIn 0.15s ease both;
+        }
+
+        @keyframes dropIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .export-dropdown.open { display: block; }
+
+        .export-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+            cursor: pointer;
+            transition: background 0.15s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .export-option:hover { background: var(--maroon-pale); color: var(--maroon); }
+
+        .export-option svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+        .export-option .export-badge {
+            margin-left: auto;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            padding: 2px 7px;
+            border-radius: 10px;
+        }
+
+        .export-badge-pdf { background: #fdf0f0; color: var(--error); border: 1px solid #f5b7b1; }
+        .export-badge-csv { background: #f0fdf5; color: var(--success); border: 1px solid #b7e8cc; }
+
+        .export-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+        /* TABLE */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+        thead th {
+            padding: 12px 20px;
+            text-align: left;
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--muted);
+            background: #faf8f8;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        tbody tr { border-bottom: 1px solid #f3eaea; transition: background 0.15s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: #fdf7f7; }
+        tbody td { padding: 13px 20px; color: var(--text); vertical-align: middle; }
+        .td-muted { color: var(--muted); font-size: 12px; }
+        .td-id { font-family: 'DM Sans', sans-serif; font-weight: 600; color: var(--maroon); font-size: 13px; }
+
+        /* BADGES */
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; white-space: nowrap; }
+        .badge-routed   { background: var(--info-bg);    color: var(--info);    border: 1px solid #b8d8f0; }
+        .badge-progress { background: var(--warning-bg); color: var(--warning); border: 1px solid #f0d8a0; }
+        .badge-resolved { background: var(--success-bg); color: var(--success); border: 1px solid #b7e8cc; }
+        .badge-closed   { background: #f5f5f5;           color: #666;           border: 1px solid #ddd; }
+        .badge-academic  { background: #eef2ff; color: #3b4abf; border: 1px solid #c7d0f8; }
+        .badge-financial { background: #fff8ec; color: #92610a; border: 1px solid #f5dfa0; }
+        .badge-welfare   { background: #f0fdf5; color: #1a6b3a; border: 1px solid #b7e8cc; }
+
+        /* ACTION BUTTONS */
+        .btn-action { padding: 5px 12px; border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid; transition: all 0.15s; }
+        .btn-view { color: var(--maroon); border-color: var(--border); background: var(--white); }
+        .btn-view:hover { background: var(--maroon-pale); border-color: var(--maroon); }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(74,16,16,0.35);
+            backdrop-filter: blur(3px);
+            z-index: 500;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+            background: var(--white);
+            border-radius: 18px;
+            width: 540px;
+            max-width: 95vw;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(74,16,16,0.25);
+            animation: modalIn 0.25s ease both;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.96) translateY(10px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            padding: 24px 28px 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .modal-title { font-family: 'Playfair Display', serif; font-size: 19px; color: var(--maroon-dark); }
+
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--muted);
+            font-size: 20px;
+            line-height: 1;
+            padding: 2px 6px;
+            border-radius: 6px;
+            transition: background 0.15s;
+        }
+
+        .modal-close:hover { background: var(--maroon-pale); color: var(--maroon); }
+        .modal-body { padding: 24px 28px; }
+
+        .detail-row { display: flex; gap: 12px; margin-bottom: 16px; }
+
+        .detail-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--muted);
+            min-width: 120px;
+            padding-top: 2px;
+        }
+
+        .detail-value { font-size: 14px; color: var(--text); flex: 1; line-height: 1.5; }
+        .detail-divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+        .modal-footer {
+            padding: 16px 28px 24px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .status-select {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 9px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            color: var(--text);
+            background: #faf8f8;
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b1a1a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 30px;
+        }
+
+        .status-select:focus { border-color: var(--maroon); }
+
+        .btn-save {
+            padding: 10px 22px;
+            background: var(--maroon);
+            color: var(--white);
+            border: none;
+            border-radius: 9px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-save:hover { background: var(--maroon-dark); }
+
+        /* AUDIT LOG */
+        .audit-list { list-style: none; }
+
+        .audit-item {
+            display: flex;
+            gap: 14px;
+            padding: 14px 20px;
+            border-bottom: 1px solid #f3eaea;
+            font-size: 13px;
+        }
+
+        .audit-item:last-child { border-bottom: none; }
+
+        .audit-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--maroon-light); flex-shrink: 0; margin-top: 5px; }
+        .audit-meta { color: var(--muted); font-size: 11.5px; margin-top: 3px; }
+
+        .empty-state { text-align: center; padding: 48px 24px; color: var(--muted); }
+        .empty-state p { font-size: 14px; }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 28px; right: 28px;
+            background: var(--maroon-dark);
+            color: var(--white);
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 4px 20px rgba(74,16,16,0.3);
+            z-index: 999;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        .loading-row td { text-align: center; padding: 40px; color: var(--muted); font-style: italic; font-size: 13px; }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        @media (max-width: 900px) {
+            aside { display: none; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            main { padding: 24px 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+    <a class="nav-brand" href="#">Support<span>Track</span> <span style="font-size:13px;font-family:'DM Sans',sans-serif;font-weight:400;opacity:0.6;margin-left:6px;">Admin</span></a>
+    <div class="nav-right">
+        <span class="nav-admin-badge" id="nav-admin-name">Administrator</span>
+        <a href="/admin/logout" class="nav-logout">Logout</a>
+    </div>
+</nav>
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside>
+        <div class="sidebar-section">
+            <p class="sidebar-section-label">Overview</p>
+            <button class="sidebar-link active" onclick="showTab('concerns', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                All Concerns
+            </button>
+            <button class="sidebar-link" onclick="showTab('audit', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Audit Log
+            </button>
+            <button class="sidebar-link" onclick="showTab('users', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Students
+            </button>
+        </div>
+        <div class="sidebar-section">
+            <p class="sidebar-section-label">Filter by Dept</p>
+            <button class="sidebar-link" onclick="filterByDept('CCS Dean\'s Office', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                CCS Dean's Office
+            </button>
+            <button class="sidebar-link" onclick="filterByDept('CBA Dean\'s Office', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                CBA Dean's Office
+            </button>
+            <button class="sidebar-link" onclick="filterByDept('Guidance Office', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                Guidance Office
+            </button>
+            <button class="sidebar-link" onclick="filterByDept('Accounting & Cashier', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                Accounting & Cashier
+            </button>
+            <button class="sidebar-link" onclick="filterByDept('Registrar\'s Office', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                Registrar's Office
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main>
+        <!-- STATS -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <p class="stat-label">Total Concerns</p>
+                <p class="stat-value" id="stat-total">—</p>
+                <p class="stat-sub">All time</p>
+            </div>
+            <div class="stat-card">
+                <p class="stat-label">Routed</p>
+                <p class="stat-value" id="stat-routed" style="color:#1a4a6b;">—</p>
+                <p class="stat-sub"><span class="stat-dot" style="background:#4a90c4;"></span>Pending action</p>
+            </div>
+            <div class="stat-card">
+                <p class="stat-label">In Progress</p>
+                <p class="stat-value" id="stat-progress" style="color:#92610a;">—</p>
+                <p class="stat-sub"><span class="stat-dot" style="background:#e6a817;"></span>Being handled</p>
+            </div>
+            <div class="stat-card">
+                <p class="stat-label">Resolved</p>
+                <p class="stat-value" id="stat-resolved" style="color:#1a6b3a;">—</p>
+                <p class="stat-sub"><span class="stat-dot" style="background:#2ecc71;"></span>Completed</p>
+            </div>
+        </div>
+
+        <!-- TAB: CONCERNS -->
+        <div id="tab-concerns" class="tab-panel active">
+            <div class="section-card">
+                <div class="section-card-header">
+                    <h3 class="section-card-title">Concerns</h3>
+                    <div class="filters">
+                        <input type="text" class="search-input" placeholder="Search ID or student…" id="searchInput" oninput="applyFilters()">
+                        <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+                            <option value="">All Status</option>
+                            <option value="Routed">Routed</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Resolved">Resolved</option>
+                            <option value="Closed">Closed</option>
+                        </select>
+                        <select class="filter-select" id="filterCategory" onchange="applyFilters()">
+                            <option value="">All Categories</option>
+                            <option value="Academic">Academic</option>
+                            <option value="Financial">Financial</option>
+                            <option value="Student Welfare">Student Welfare</option>
+                        </select>
+
+                        <!-- ── EXPORT DROPDOWN ── -->
+                        <div class="export-wrapper" id="exportWrapper">
+                            <button class="btn-export" onclick="toggleExportMenu()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="7 10 12 15 17 10"/>
+                                    <line x1="12" y1="15" x2="12" y2="3"/>
+                                </svg>
+                                Export
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;margin-left:2px;">
+                                    <polyline points="6 9 12 15 18 9"/>
+                                </svg>
+                            </button>
+                            <div class="export-dropdown" id="exportDropdown">
+                                <button class="export-option" onclick="exportPDF()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                    </svg>
+                                    Export as PDF
+                                    <span class="export-badge export-badge-pdf">PDF</span>
+                                </button>
+                                <div class="export-divider"></div>
+                                <button class="export-option" onclick="exportCSV()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                                    </svg>
+                                    Export as CSV
+                                    <span class="export-badge export-badge-csv">CSV</span>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="section-card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tracking ID</th>
+                                <th>Student ID</th>
+                                <th>Category</th>
+                                <th>Routed To</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="concernsTableBody">
+                            <tr class="loading-row"><td colspan="7">Loading concerns…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: AUDIT LOG -->
+        <div id="tab-audit" class="tab-panel">
+            <div class="section-card">
+                <div class="section-card-header">
+                    <h3 class="section-card-title">Audit Log</h3>
+                </div>
+                <div class="section-card-body">
+                    <ul class="audit-list" id="auditList">
+                        <li style="padding:40px;text-align:center;color:var(--muted);font-style:italic;font-size:13px;">Loading audit log…</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: STUDENTS -->
+        <div id="tab-users" class="tab-panel">
+            <div class="section-card">
+                <div class="section-card-header">
+                    <h3 class="section-card-title">Registered Students</h3>
+                </div>
+                <div class="section-card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Full Name</th>
+                                <th>Program</th>
+                                <th>Email</th>
+                                <th>Registered</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr class="loading-row"><td colspan="5">Loading students…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- CONCERN DETAIL MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+    <div class="modal" id="modalBox">
+        <div class="modal-header">
+            <div>
+                <p class="modal-title" id="modalTitle">Concern Details</p>
+                <p style="font-size:12px;color:var(--muted);margin-top:4px;" id="modalSubtitle"></p>
+            </div>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-footer">
+            <select class="status-select" id="statusSelect">
+                <option value="Routed">Routed</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Closed">Closed</option>
+            </select>
+            <button class="btn-save" onclick="updateStatus()">Update Status</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+    let allConcerns = [];
+    let filteredConcerns = [];
+    let currentConcernId = null;
+    let deptFilter = null;
+
+    // Show admin username in nav
+    const adminName = localStorage.getItem('admin_username');
+    if (adminName) document.getElementById('nav-admin-name').innerText = adminName;
+
+    // ── EXPORT DROPDOWN TOGGLE ──
+    function toggleExportMenu() {
+        document.getElementById('exportDropdown').classList.toggle('open');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        const wrapper = document.getElementById('exportWrapper');
+        if (!wrapper.contains(e.target)) {
+            document.getElementById('exportDropdown').classList.remove('open');
+        }
+    });
+
+    // ── EXPORT CSV ──
+    function exportCSV() {
+        document.getElementById('exportDropdown').classList.remove('open');
+
+        const data = filteredConcerns.length ? filteredConcerns : allConcerns;
+        if (!data.length) { showToast('No data to export.'); return; }
+
+        const headers = ['Tracking ID', 'Student ID', 'Category', 'Routed To', 'Status', 'Submitted'];
+        const rows = data.map(c => [
+            c.id,
+            c.is_anonymous ? 'Anonymous' : (c.student_id || ''),
+            c.category,
+            c.assigned_dept || '',
+            c.status,
+            formatDatePlain(c.created_at)
+        ]);
+
+        const csvContent = [headers, ...rows]
+            .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+            .join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `supporttrack_concerns_${today()}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        showToast('CSV exported successfully!');
+    }
+
+    // ── EXPORT PDF ──
+    function exportPDF() {
+        document.getElementById('exportDropdown').classList.remove('open');
+
+        const data = filteredConcerns.length ? filteredConcerns : allConcerns;
+        if (!data.length) { showToast('No data to export.'); return; }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+        // Header
+        doc.setFillColor(74, 16, 16);
+        doc.rect(0, 0, 297, 20, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.text('SupportTrack — Concerns Report', 14, 13);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Generated: ${formatDatePlain(new Date().toISOString())}`, 230, 13);
+
+        // Table
+        doc.autoTable({
+            startY: 26,
+            head: [['Tracking ID', 'Student ID', 'Category', 'Routed To', 'Status', 'Submitted']],
+            body: data.map(c => [
+                c.id,
+                c.is_anonymous ? 'Anonymous' : (c.student_id || '—'),
+                c.category,
+                c.assigned_dept || '—',
+                c.status,
+                formatDatePlain(c.created_at)
+            ]),
+            headStyles: {
+                fillColor: [107, 26, 26],
+                textColor: 255,
+                fontStyle: 'bold',
+                fontSize: 9,
+            },
+            bodyStyles: { fontSize: 9, textColor: [30, 30, 30] },
+            alternateRowStyles: { fillColor: [253, 245, 245] },
+            columnStyles: {
+                0: { cellWidth: 28 },
+                1: { cellWidth: 38 },
+                2: { cellWidth: 32 },
+                3: { cellWidth: 52 },
+                4: { cellWidth: 28 },
+                5: { cellWidth: 44 },
+            },
+            margin: { left: 14, right: 14 },
+        });
+
+        // Footer
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text(`Page ${i} of ${pageCount}`, 14, doc.internal.pageSize.height - 8);
+        }
+
+        doc.save(`supporttrack_concerns_${today()}.pdf`);
+        showToast('PDF exported successfully!');
+    }
+
+    // ── TABS ──
+    function showTab(name, el) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        if (el) el.classList.add('active');
+        if (name === 'audit') loadAuditLog();
+        if (name === 'users') loadUsers();
+    }
+
+    // ── LOAD CONCERNS ──
+    async function loadConcerns() {
+        try {
+            const res  = await fetch('/admin/concerns');
+            const data = await res.json();
+            allConcerns     = data.concerns || [];
+            filteredConcerns = [];
+            updateStats(allConcerns);
+            renderConcerns(allConcerns);
+        } catch {
+            document.getElementById('concernsTableBody').innerHTML =
+                '<tr class="loading-row"><td colspan="7">Failed to load. Check your connection.</td></tr>';
+        }
+    }
+
+    // ── STATS ──
+    function updateStats(concerns) {
+        document.getElementById('stat-total').innerText    = concerns.length;
+        document.getElementById('stat-routed').innerText   = concerns.filter(c => c.status === 'Routed').length;
+        document.getElementById('stat-progress').innerText = concerns.filter(c => c.status === 'In Progress').length;
+        document.getElementById('stat-resolved').innerText = concerns.filter(c => c.status === 'Resolved').length;
+    }
+
+    // ── RENDER TABLE ──
+    function renderConcerns(concerns) {
+        filteredConcerns = concerns;
+        const tbody = document.getElementById('concernsTableBody');
+        if (!concerns.length) {
+            tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>No concerns found.</p></div></td></tr>';
+            return;
+        }
+        tbody.innerHTML = concerns.map(c => `
+            <tr>
+                <td><span class="td-id">${c.id}</span></td>
+                <td>${c.is_anonymous ? '<em style="color:var(--muted);font-size:12px;">Anonymous</em>' : (c.student_id || '—')}</td>
+                <td>${categoryBadge(c.category)}</td>
+                <td class="td-muted">${c.assigned_dept || '—'}</td>
+                <td>${statusBadge(c.status)}</td>
+                <td class="td-muted">${formatDate(c.created_at)}</td>
+                <td><button class="btn-action btn-view" onclick="openModal('${c.id}')">View</button></td>
+            </tr>
+        `).join('');
+    }
+
+    // ── FILTERS ──
+    function applyFilters() {
+        const search   = document.getElementById('searchInput').value.toLowerCase();
+        const status   = document.getElementById('filterStatus').value;
+        const category = document.getElementById('filterCategory').value;
+
+        const filtered = allConcerns.filter(c => {
+            const matchSearch   = !search   || c.id.toLowerCase().includes(search) || (c.student_id || '').toLowerCase().includes(search);
+            const matchStatus   = !status   || c.status === status;
+            const matchCategory = !category || c.category === category;
+            const matchDept     = !deptFilter || c.assigned_dept === deptFilter;
+            return matchSearch && matchStatus && matchCategory && matchDept;
+        });
+
+        renderConcerns(filtered);
+    }
+
+    function filterByDept(dept, el) {
+        deptFilter = dept;
+        document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+        if (el) el.classList.add('active');
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('tab-concerns').classList.add('active');
+        applyFilters();
+    }
+
+    // ── MODAL ──
+    async function openModal(id) {
+        const c = allConcerns.find(x => x.id === id);
+        if (!c) return;
+        currentConcernId = id;
+
+        document.getElementById('modalTitle').innerText    = 'Concern ' + c.id;
+        document.getElementById('modalSubtitle').innerText = 'Submitted ' + formatDate(c.created_at);
+        document.getElementById('statusSelect').value      = c.status;
+        document.getElementById('modalBody').innerHTML     = `<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Loading details…</p>`;
+        document.getElementById('modalOverlay').classList.add('open');
+
+        let fullName = '—';
+        if (!c.is_anonymous && c.student_id) {
+            try {
+                const res  = await fetch(`/admin/student_info/${c.student_id}`);
+                const data = await res.json();
+                fullName = data.full_name || '—';
+            } catch { fullName = '—'; }
+        }
+
+        document.getElementById('modalBody').innerHTML = `
+            <div class="detail-row">
+                <span class="detail-label">Category</span>
+                <span class="detail-value">${categoryBadge(c.category)}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Student ID</span>
+                <span class="detail-value">${c.is_anonymous ? '<em style="color:var(--muted)">Anonymous</em>' : (c.student_id || '—')}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Full Name</span>
+                <span class="detail-value">${c.is_anonymous ? '<em style="color:var(--muted)">Anonymous</em>' : fullName}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Program</span>
+                <span class="detail-value">${c.program || '—'}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Routed To</span>
+                <span class="detail-value">${c.assigned_dept || '—'}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Status</span>
+                <span class="detail-value">${statusBadge(c.status)}</span>
+            </div>
+            <div class="detail-divider"></div>
+            <div class="detail-row">
+                <span class="detail-label">Description</span>
+                <span class="detail-value" style="white-space:pre-wrap;">${c.description || '—'}</span>
+            </div>
+            ${c.attachment_path ? `
+            <div class="detail-divider"></div>
+            <div class="detail-row">
+                <span class="detail-label">Attachment</span>
+                <span class="detail-value"><a href="${c.attachment_path}" target="_blank" style="color:var(--maroon);font-weight:600;">View File ↗</a></span>
+            </div>` : ''}
+        `;
+    }
+
+    function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+    function closeModalOutside(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+
+    // ── UPDATE STATUS ──
+    async function updateStatus() {
+        const newStatus = document.getElementById('statusSelect').value;
+        try {
+            const res  = await fetch('/admin/update_status', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ concern_id: currentConcernId, status: newStatus })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                const idx = allConcerns.findIndex(c => c.id === currentConcernId);
+                if (idx > -1) allConcerns[idx].status = newStatus;
+                updateStats(allConcerns);
+                applyFilters();
+                closeModal();
+                showToast('Status updated to "' + newStatus + '"');
+            } else {
+                showToast('Error: ' + data.message);
+            }
+        } catch {
+            showToast('Server error. Please try again.');
+        }
+    }
+
+    // ── AUDIT LOG ──
+    async function loadAuditLog() {
+        const list = document.getElementById('auditList');
+        list.innerHTML = '<li style="padding:40px;text-align:center;color:var(--muted);font-style:italic;font-size:13px;">Loading…</li>';
+        try {
+            const res  = await fetch('/admin/audit_logs');
+            const data = await res.json();
+            const logs = data.logs || [];
+            if (!logs.length) {
+                list.innerHTML = '<li style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">No audit logs yet.</li>';
+                return;
+            }
+            list.innerHTML = logs.map(l => `
+                <li class="audit-item">
+                    <span class="audit-dot"></span>
+                    <div>
+                        <p style="font-size:13px;color:var(--text);">${l.action}</p>
+                        <p class="audit-meta">Actor: <strong>${l.actor}</strong> &nbsp;·&nbsp; ${formatDate(l.created_at)}</p>
+                    </div>
+                </li>
+            `).join('');
+        } catch {
+            list.innerHTML = '<li style="padding:24px;text-align:center;color:var(--error);font-size:13px;">Failed to load audit log.</li>';
+        }
+    }
+
+    // ── STUDENTS ──
+    async function loadUsers() {
+        const tbody = document.getElementById('usersTableBody');
+        tbody.innerHTML = '<tr class="loading-row"><td colspan="5">Loading…</td></tr>';
+        try {
+            const res  = await fetch('/admin/students');
+            const data = await res.json();
+            const users = data.students || [];
+            if (!users.length) {
+                tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><p>No students registered yet.</p></div></td></tr>';
+                return;
+            }
+            tbody.innerHTML = users.map(u => `
+                <tr>
+                    <td><span class="td-id">${u.student_id || '—'}</span></td>
+                    <td>${(u.first_name || '') + ' ' + (u.last_name || '')}</td>
+                    <td>${u.program || '—'}</td>
+                    <td class="td-muted">${u.email || '—'}</td>
+                    <td class="td-muted">${formatDate(u.created_at)}</td>
+                </tr>
+            `).join('');
+        } catch {
+            tbody.innerHTML = '<tr class="loading-row"><td colspan="5">Failed to load students.</td></tr>';
+        }
+    }
+
+    // ── HELPERS ──
+    function statusBadge(status) {
+        const map = { 'Routed': 'badge-routed', 'In Progress': 'badge-progress', 'Resolved': 'badge-resolved', 'Closed': 'badge-closed' };
+        return `<span class="badge ${map[status] || 'badge-routed'}">${status}</span>`;
+    }
+
+    function categoryBadge(cat) {
+        const map = { 'Academic': 'badge-academic', 'Financial': 'badge-financial', 'Student Welfare': 'badge-welfare', 'Welfare': 'badge-welfare' };
+        return `<span class="badge ${map[cat] || ''}">${cat}</span>`;
+    }
+
+    function formatDate(iso) {
+        if (!iso) return '—';
+        const d = new Date(iso);
+        return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })
+             + ' ' + d.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function formatDatePlain(iso) {
+        if (!iso) return '';
+        const d = new Date(iso);
+        return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function today() {
+        return new Date().toISOString().slice(0, 10);
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // ── INIT ──
+    loadConcerns();
+</script>
+</body>
+</html>
